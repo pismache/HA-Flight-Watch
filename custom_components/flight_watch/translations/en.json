@@ -3,7 +3,7 @@
     "step": {
       "user": {
         "title": "ADS-B receiver",
-        "description": "URL of the aircraft.json file published by readsb / tar1090, for example http://<receiver>/tar1090/data/aircraft.json or http://<host>:<port>/data/aircraft.json for ultrafeeder.",
+        "description": "URL of the aircraft.json file published by readsb / tar1090, for example http://RECEIVER/tar1090/data/aircraft.json or http://HOST:PORT/data/aircraft.json for ultrafeeder.",
         "data": {
           "url": "aircraft.json URL",
           "callsigns": "Flights to watch",
