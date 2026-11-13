@@ -1,0 +1,57 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Récepteur ADS-B",
+        "description": "URL du fichier aircraft.json publié par readsb / tar1090, par exemple http://<récepteur>/tar1090/data/aircraft.json, ou http://<hôte>:<port>/data/aircraft.json pour ultrafeeder.",
+        "data": {
+          "url": "URL de aircraft.json",
+          "callsigns": "Vols à surveiller",
+          "scan_interval": "Intervalle d'interrogation",
+          "max_seen": "Considérer un avion perdu après"
+        },
+        "data_description": {
+          "callsigns": "Indicatif tel qu'émis (code OACI, ex. FBU711 pour le vol French Bee BF711), immatriculation (F-HREU) ou code hex OACI. Terminer par * pour une correspondance par préfixe (FBU* = tous les vols French Bee).",
+          "max_seen": "Secondes sans aucun message de l'avion avant qu'il ne soit plus considéré à portée."
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Impossible de joindre cette URL.",
+      "invalid_data": "L'URL répond mais ce n'est pas un aircraft.json readsb / tar1090 (pas de liste « aircraft »)."
+    },
+    "abort": {
+      "already_configured": "Ce récepteur est déjà configuré."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Vols surveillés",
+        "data": {
+          "callsigns": "Vols à surveiller",
+          "scan_interval": "Intervalle d'interrogation",
+          "max_seen": "Considérer un avion perdu après"
+        },
+        "data_description": {
+          "callsigns": "Indicatif tel qu'émis (code OACI, ex. FBU711 pour le vol French Bee BF711), immatriculation (F-HREU) ou code hex OACI. Terminer par * pour une correspondance par préfixe (FBU* = tous les vols French Bee).",
+          "max_seen": "Secondes sans aucun message de l'avion avant qu'il ne soit plus considéré à portée."
+        }
+      }
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "in_range": { "name": "À portée" }
+    },
+    "sensor": {
+      "aircraft_total": { "name": "Avions suivis", "unit_of_measurement": "avions" },
+      "aircraft_with_position": { "name": "Avions avec position", "unit_of_measurement": "avions" },
+      "callsign": { "name": "Indicatif" },
+      "altitude": { "name": "Altitude" },
+      "distance": { "name": "Distance" },
+      "ground_speed": { "name": "Vitesse sol" },
+      "bearing": { "name": "Relèvement" }
+    }
+  }
+}

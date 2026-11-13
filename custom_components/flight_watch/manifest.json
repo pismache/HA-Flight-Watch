@@ -1,0 +1,12 @@
+{
+  "domain": "flight_watch",
+  "name": "Flight Watch",
+  "codeowners": ["@pismache"],
+  "config_flow": true,
+  "documentation": "https://github.com/pismache/ha-flight-watch",
+  "integration_type": "service",
+  "iot_class": "local_polling",
+  "issue_tracker": "https://github.com/pismache/ha-flight-watch/issues",
+  "requirements": [],
+  "version": "0.1.0"
+}

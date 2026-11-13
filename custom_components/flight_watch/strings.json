@@ -1,0 +1,57 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "ADS-B receiver",
+        "description": "URL of the aircraft.json file published by readsb / tar1090, for example http://<receiver>/tar1090/data/aircraft.json or http://<host>:<port>/data/aircraft.json for ultrafeeder.",
+        "data": {
+          "url": "aircraft.json URL",
+          "callsigns": "Flights to watch",
+          "scan_interval": "Polling interval",
+          "max_seen": "Consider an aircraft gone after"
+        },
+        "data_description": {
+          "callsigns": "Callsign as transmitted (ICAO code, e.g. FBU711 for French Bee BF711), registration (F-HREU) or ICAO hex. End with * for a prefix match (FBU* = every French Bee flight).",
+          "max_seen": "Seconds without any message from the aircraft before it is no longer considered in range."
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Cannot reach this URL.",
+      "invalid_data": "The URL answered but is not a readsb / tar1090 aircraft.json (no 'aircraft' list)."
+    },
+    "abort": {
+      "already_configured": "This receiver is already configured."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Watched flights",
+        "data": {
+          "callsigns": "Flights to watch",
+          "scan_interval": "Polling interval",
+          "max_seen": "Consider an aircraft gone after"
+        },
+        "data_description": {
+          "callsigns": "Callsign as transmitted (ICAO code, e.g. FBU711 for French Bee BF711), registration (F-HREU) or ICAO hex. End with * for a prefix match (FBU* = every French Bee flight).",
+          "max_seen": "Seconds without any message from the aircraft before it is no longer considered in range."
+        }
+      }
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "in_range": { "name": "In range" }
+    },
+    "sensor": {
+      "aircraft_total": { "name": "Aircraft tracked", "unit_of_measurement": "aircraft" },
+      "aircraft_with_position": { "name": "Aircraft with position", "unit_of_measurement": "aircraft" },
+      "callsign": { "name": "Callsign" },
+      "altitude": { "name": "Altitude" },
+      "distance": { "name": "Distance" },
+      "ground_speed": { "name": "Ground speed" },
+      "bearing": { "name": "Bearing" }
+    }
+  }
+}
