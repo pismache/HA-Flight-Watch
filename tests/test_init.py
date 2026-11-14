@@ -105,8 +105,12 @@ async def test_entities_and_events(hass: HomeAssistant, aioclient_mock) -> None:
     assert state.state == "on"
     assert state.attributes["registration"] == "F-HREU"
     assert hass.states.get("sensor.flight_fbu711_distance").state == "37.0"
-    assert hass.states.get("sensor.flight_fbu711_altitude").state == "37000"
-    assert hass.states.get("sensor.flight_fbu711_ground_speed").state == "480.2"
+    # Default units = automatic, the test instance is metric
+    alt = hass.states.get("sensor.flight_fbu711_altitude")
+    assert (alt.state, alt.attributes["unit_of_measurement"]) == ("11277.6", "m")
+    speed = hass.states.get("sensor.flight_fbu711_ground_speed")
+    assert speed.attributes["unit_of_measurement"] == "km/h"
+    assert round(float(speed.state)) == 889
     # FBU720 is too old (seen 500 s) and must not match the prefix
     assert hass.states.get("binary_sensor.flight_fbu_in_range").attributes["match_count"] == 1
     assert {e.data["watch"] for e in detected} == {"FBU711", "FBU*"}
@@ -171,6 +175,7 @@ async def test_notifications(hass: HomeAssistant, aioclient_mock) -> None:
     assert len(calls) == 1
     assert "FBU711" in calls[0].data["title"]
     assert "F-HREU" in calls[0].data["message"]
+    assert "11 278 m" in calls[0].data["message"] and "km/h" in calls[0].data["message"]
     assert calls[0].data["data"]["url"] == "http://receiver.local/tar1090"
 
     aioclient_mock.clear_requests()
@@ -192,3 +197,22 @@ async def test_notify_options_list(hass: HomeAssistant, aioclient_mock) -> None:
     notify_key = next(k for k in schema if k == "notify")
     values = [o["value"] for o in schema[notify_key].config["options"]]
     assert values == ["mobile_app_iphone_test"]
+
+
+async def test_units_switch_to_aviation(hass: HomeAssistant, aioclient_mock) -> None:
+    from custom_components.flight_watch.const import CONF_UNITS
+
+    entry = await _setup(hass, aioclient_mock, WITH_FLIGHT)
+    assert hass.states.get("sensor.flight_fbu711_altitude").attributes["unit_of_measurement"] == "m"
+
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        {CONF_CALLSIGNS: ["FBU711"], CONF_UNITS: "aviation", CONF_SCAN_INTERVAL: 15, CONF_MAX_SEEN: 60},
+    )
+    await hass.async_block_till_done()
+    alt = hass.states.get("sensor.flight_fbu711_altitude")
+    assert (alt.state, alt.attributes["unit_of_measurement"]) == ("37000", "ft")
+    assert hass.states.get("sensor.flight_fbu711_ground_speed").attributes["unit_of_measurement"] == "kn"
+    dist = hass.states.get("sensor.flight_fbu711_distance")
+    assert dist.attributes["unit_of_measurement"] == "nmi"

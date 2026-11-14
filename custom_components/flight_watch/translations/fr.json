@@ -10,12 +10,14 @@
           "scan_interval": "Intervalle d'interrogation",
           "max_seen": "Considérer un avion perdu après",
           "notify": "Envoyer une notification à",
-          "notify_lost": "Prévenir aussi quand le vol sort de portée"
+          "notify_lost": "Prévenir aussi quand le vol sort de portée",
+          "units": "Unités"
         },
         "data_description": {
           "callsigns": "Indicatif tel qu'émis (code OACI, ex. FBU711 pour le vol French Bee BF711), immatriculation (F-HREU) ou code hex OACI. Terminer par * pour une correspondance par préfixe (FBU* = tous les vols French Bee).",
           "max_seen": "Secondes sans aucun message de l'avion avant qu'il ne soit plus considéré à portée.",
-          "notify": "Téléphones, tablettes ou autres services de notification qui reçoivent une alerte quand un vol surveillé arrive à portée. Laisser vide pour n'utiliser que les entités et les événements."
+          "notify": "Téléphones, tablettes ou autres services de notification qui reçoivent une alerte quand un vol surveillé arrive à portée. Laisser vide pour n'utiliser que les entités et les événements.",
+          "units": "Altitude, distance et vitesse : métrique (m, km, km/h), aviation (ft, NM, kt), ou Automatique pour suivre le système d'unités de Home Assistant."
         }
       }
     },
@@ -36,12 +38,14 @@
           "scan_interval": "Intervalle d'interrogation",
           "max_seen": "Considérer un avion perdu après",
           "notify": "Envoyer une notification à",
-          "notify_lost": "Prévenir aussi quand le vol sort de portée"
+          "notify_lost": "Prévenir aussi quand le vol sort de portée",
+          "units": "Unités"
         },
         "data_description": {
           "callsigns": "Indicatif tel qu'émis (code OACI, ex. FBU711 pour le vol French Bee BF711), immatriculation (F-HREU) ou code hex OACI. Terminer par * pour une correspondance par préfixe (FBU* = tous les vols French Bee).",
           "max_seen": "Secondes sans aucun message de l'avion avant qu'il ne soit plus considéré à portée.",
-          "notify": "Téléphones, tablettes ou autres services de notification qui reçoivent une alerte quand un vol surveillé arrive à portée. Laisser vide pour n'utiliser que les entités et les événements."
+          "notify": "Téléphones, tablettes ou autres services de notification qui reçoivent une alerte quand un vol surveillé arrive à portée. Laisser vide pour n'utiliser que les entités et les événements.",
+          "units": "Altitude, distance et vitesse : métrique (m, km, km/h), aviation (ft, NM, kt), ou Automatique pour suivre le système d'unités de Home Assistant."
         }
       }
     }
@@ -75,6 +79,15 @@
       },
       "bearing": {
         "name": "Relèvement"
+      }
+    }
+  },
+  "selector": {
+    "units": {
+      "options": {
+        "auto": "Automatique (système d'unités de Home Assistant)",
+        "metric": "Métrique (m, km, km/h)",
+        "aviation": "Aviation (ft, NM, kt)"
       }
     }
   }

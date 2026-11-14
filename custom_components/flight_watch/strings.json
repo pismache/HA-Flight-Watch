@@ -10,12 +10,14 @@
           "scan_interval": "Polling interval",
           "max_seen": "Consider an aircraft gone after",
           "notify": "Send a notification to",
-          "notify_lost": "Also notify when the flight leaves range"
+          "notify_lost": "Also notify when the flight leaves range",
+          "units": "Units"
         },
         "data_description": {
           "callsigns": "Callsign as transmitted (ICAO code, e.g. FBU711 for French Bee BF711), registration (F-HREU) or ICAO hex. End with * for a prefix match (FBU* = every French Bee flight).",
           "max_seen": "Seconds without any message from the aircraft before it is no longer considered in range.",
-          "notify": "Phones, tablets or other notify services that receive an alert when a watched flight comes into range. Leave empty to only use the entities and events."
+          "notify": "Phones, tablets or other notify services that receive an alert when a watched flight comes into range. Leave empty to only use the entities and events.",
+          "units": "Altitude, distance and speed: metric (m, km, km/h), aviation (ft, NM, kt), or Automatic to follow the Home Assistant unit system."
         }
       }
     },
@@ -36,12 +38,14 @@
           "scan_interval": "Polling interval",
           "max_seen": "Consider an aircraft gone after",
           "notify": "Send a notification to",
-          "notify_lost": "Also notify when the flight leaves range"
+          "notify_lost": "Also notify when the flight leaves range",
+          "units": "Units"
         },
         "data_description": {
           "callsigns": "Callsign as transmitted (ICAO code, e.g. FBU711 for French Bee BF711), registration (F-HREU) or ICAO hex. End with * for a prefix match (FBU* = every French Bee flight).",
           "max_seen": "Seconds without any message from the aircraft before it is no longer considered in range.",
-          "notify": "Phones, tablets or other notify services that receive an alert when a watched flight comes into range. Leave empty to only use the entities and events."
+          "notify": "Phones, tablets or other notify services that receive an alert when a watched flight comes into range. Leave empty to only use the entities and events.",
+          "units": "Altitude, distance and speed: metric (m, km, km/h), aviation (ft, NM, kt), or Automatic to follow the Home Assistant unit system."
         }
       }
     }
@@ -75,6 +79,15 @@
       },
       "bearing": {
         "name": "Bearing"
+      }
+    }
+  },
+  "selector": {
+    "units": {
+      "options": {
+        "auto": "Automatic (Home Assistant unit system)",
+        "metric": "Metric (m, km, km/h)",
+        "aviation": "Aviation (ft, NM, kt)"
       }
     }
   }

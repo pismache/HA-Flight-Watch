@@ -28,10 +28,13 @@ from .const import (
     CONF_NOTIFY,
     CONF_NOTIFY_LOST,
     CONF_SCAN_INTERVAL,
+    CONF_UNITS,
     CONF_URL,
     DEFAULT_MAX_SEEN,
     DEFAULT_SCAN_INTERVAL,
     DOMAIN,
+    UNIT_CHOICES,
+    UNITS_AUTO,
 )
 from .coordinator import CannotConnect, InvalidData, fetch_aircraft_json, normalize
 from .notify_helper import notify_service_options
@@ -39,6 +42,11 @@ from .notify_helper import notify_service_options
 CALLSIGNS_SELECTOR = TextSelector(TextSelectorConfig(multiple=True))
 SCAN_INTERVAL_SELECTOR = NumberSelector(
     NumberSelectorConfig(min=5, max=300, step=1, unit_of_measurement="s", mode=NumberSelectorMode.BOX)
+)
+UNITS_SELECTOR = SelectSelector(
+    SelectSelectorConfig(
+        options=UNIT_CHOICES, translation_key=CONF_UNITS, mode=SelectSelectorMode.DROPDOWN
+    )
 )
 MAX_SEEN_SELECTOR = NumberSelector(
     NumberSelectorConfig(min=10, max=600, step=5, unit_of_measurement="s", mode=NumberSelectorMode.BOX)
@@ -60,6 +68,7 @@ def _options_from_input(user_input: dict[str, Any]) -> dict[str, Any]:
         CONF_CALLSIGNS: _clean_callsigns(user_input.get(CONF_CALLSIGNS)),
         CONF_NOTIFY: list(user_input.get(CONF_NOTIFY, [])),
         CONF_NOTIFY_LOST: bool(user_input.get(CONF_NOTIFY_LOST, False)),
+        CONF_UNITS: user_input.get(CONF_UNITS, UNITS_AUTO),
         CONF_SCAN_INTERVAL: int(user_input[CONF_SCAN_INTERVAL]),
         CONF_MAX_SEEN: int(user_input[CONF_MAX_SEEN]),
     }
@@ -111,6 +120,7 @@ class FlightWatchConfigFlow(ConfigFlow, domain=DOMAIN):
                 vol.Optional(CONF_CALLSIGNS, default=[]): CALLSIGNS_SELECTOR,
                 vol.Optional(CONF_NOTIFY, default=[]): _notify_selector(self.hass),
                 vol.Optional(CONF_NOTIFY_LOST, default=False): BooleanSelector(),
+                vol.Required(CONF_UNITS, default=UNITS_AUTO): UNITS_SELECTOR,
                 vol.Required(CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL): SCAN_INTERVAL_SELECTOR,
                 vol.Required(CONF_MAX_SEEN, default=DEFAULT_MAX_SEEN): MAX_SEEN_SELECTOR,
             }
@@ -146,6 +156,7 @@ class FlightWatchOptionsFlow(OptionsFlow):
                 vol.Optional(
                     CONF_NOTIFY_LOST, default=options.get(CONF_NOTIFY_LOST, False)
                 ): BooleanSelector(),
+                vol.Required(CONF_UNITS, default=options.get(CONF_UNITS, UNITS_AUTO)): UNITS_SELECTOR,
                 vol.Required(
                     CONF_SCAN_INTERVAL, default=options.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
                 ): SCAN_INTERVAL_SELECTOR,

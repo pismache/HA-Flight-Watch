@@ -21,6 +21,7 @@ from .const import (
     CONF_NOTIFY,
     CONF_NOTIFY_LOST,
     CONF_SCAN_INTERVAL,
+    CONF_UNITS,
     CONF_URL,
     DEFAULT_MAX_SEEN,
     DEFAULT_SCAN_INTERVAL,
@@ -31,6 +32,7 @@ from .const import (
     REQUEST_TIMEOUT,
 )
 from .notify_helper import async_send
+from .units import resolve_units
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -191,6 +193,7 @@ class FlightWatchCoordinator(DataUpdateCoordinator[FlightWatchData]):
         self.patterns: list[str] = watch_list(entry)
         self.notify_services: list[str] = list(entry.options.get(CONF_NOTIFY, []))
         self.notify_lost: bool = entry.options.get(CONF_NOTIFY_LOST, False)
+        self.units: str = resolve_units(hass, entry.options.get(CONF_UNITS))
         self._session = async_get_clientsession(hass)
         # (pattern, hex) pairs currently in range, for detected/lost events
         self._present: set[tuple[str, str]] | None = None
@@ -290,7 +293,12 @@ class FlightWatchCoordinator(DataUpdateCoordinator[FlightWatchData]):
         self.config_entry.async_create_background_task(
             self.hass,
             async_send(
-                self.hass, self.notify_services, aircraft, lost=lost, url=self.receiver_url
+                self.hass,
+                self.notify_services,
+                aircraft,
+                lost=lost,
+                url=self.receiver_url,
+                units=self.units,
             ),
             f"{DOMAIN} notification {aircraft.hex}",
         )

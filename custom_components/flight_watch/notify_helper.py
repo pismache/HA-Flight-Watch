@@ -9,6 +9,9 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.util import slugify
 
+from .const import UNITS_METRIC
+from .units import convert, label, unit_for
+
 if TYPE_CHECKING:
     from .coordinator import Aircraft
 
@@ -48,14 +51,15 @@ def _pretty(service: str) -> str:
     return service.removeprefix("mobile_app_").replace("_", " ").capitalize()
 
 
-def _fmt(value: float | int | None, unit: str) -> str | None:
+def _fmt(kind: str, value: float | int | None, units: str) -> str | None:
+    value = convert(kind, value, units)
     if value is None:
         return None
-    return f"{round(value):,}".replace(",", " ") + f" {unit}"
+    return f"{round(value):,}".replace(",", " ") + f" {label(unit_for(kind, units))}"
 
 
 def build_message(
-    hass: HomeAssistant, aircraft: Aircraft, *, lost: bool
+    hass: HomeAssistant, aircraft: Aircraft, *, lost: bool, units: str = UNITS_METRIC
 ) -> tuple[str, str]:
     """Return (title, message) in French or English depending on the HA language."""
     french = (hass.config.language or "en").lower().startswith("fr")
@@ -65,10 +69,10 @@ def build_message(
     altitude = (
         ("au sol" if french else "on ground")
         if aircraft.on_ground
-        else _fmt(aircraft.altitude_ft, "ft")
+        else _fmt("altitude", aircraft.altitude_ft, units)
     )
-    distance = _fmt(aircraft.distance_km, "km")
-    speed = _fmt(aircraft.ground_speed_kt, "kt")
+    distance = _fmt("distance", aircraft.distance_km, units)
+    speed = _fmt("speed", aircraft.ground_speed_kt, units)
 
     if lost:
         title = f"🛬 {name} " + ("hors de portée" if french else "out of range")
@@ -93,9 +97,10 @@ async def async_send(
     *,
     lost: bool,
     url: str | None,
+    units: str = UNITS_METRIC,
 ) -> None:
     """Send the notification to every selected notify service."""
-    title, message = build_message(hass, aircraft, lost=lost)
+    title, message = build_message(hass, aircraft, lost=lost, units=units)
     for service in services:
         if not hass.services.has_service(NOTIFY_DOMAIN, service):
             _LOGGER.warning("Notify service notify.%s no longer exists, skipping", service)
