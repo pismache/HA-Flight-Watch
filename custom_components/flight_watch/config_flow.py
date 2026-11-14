@@ -36,7 +36,13 @@ from .const import (
     UNIT_CHOICES,
     UNITS_AUTO,
 )
-from .coordinator import CannotConnect, InvalidData, fetch_aircraft_json, normalize
+from .coordinator import (
+    CannotConnect,
+    InvalidData,
+    fetch_aircraft_json,
+    format_watch_items,
+    parse_watch_items,
+)
 from .notify_helper import notify_service_options
 
 CALLSIGNS_SELECTOR = TextSelector(TextSelectorConfig(multiple=True))
@@ -75,18 +81,8 @@ def _options_from_input(user_input: dict[str, Any]) -> dict[str, Any]:
 
 
 def _clean_callsigns(values: list[str] | str | None) -> list[str]:
-    """Normalize the watch list typed by the user (also accepts comma-separated text)."""
-    if not values:
-        return []
-    if isinstance(values, str):
-        values = [values]
-    result: dict[str, None] = {}
-    for value in values:
-        for part in value.split(","):
-            norm = normalize(part)
-            if norm and norm != "*":
-                result[norm] = None
-    return list(result)
+    """Normalize the watch list typed by the user ("FBU85A = Retour maman", "AFR*", ...)."""
+    return format_watch_items(parse_watch_items(values))
 
 
 class FlightWatchConfigFlow(ConfigFlow, domain=DOMAIN):

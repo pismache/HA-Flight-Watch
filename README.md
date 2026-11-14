@@ -14,6 +14,8 @@ already publishes. No cloud service, no API key.
 - Watch any number of flights by **callsign** (`FBU711`), **registration** (`F-HREU`)
   or **ICAO hex** (`39a4b2`).
 - **Prefix match** with a trailing `*`: `FBU*` watches every French Bee flight.
+- **Aliases** to recognise a flight: `FBU85A = Mum coming home` names the device
+  "Mum coming home (FBU85A)" and puts the alias in the notification.
 - For each watched flight, a device with:
   - `binary_sensor.flight_<x>_in_range` – on while the aircraft is received, with all
     its details as attributes (callsign, registration, type, altitude, speed, position…)
@@ -46,7 +48,7 @@ Copy `custom_components/flight_watch` into your `config/custom_components` folde
 | Field | Description |
 |---|---|
 | aircraft.json URL | `http://<receiver>/tar1090/data/aircraft.json` (tar1090), or `http://<host>:<port>/data/aircraft.json` (ultrafeeder) |
-| Flights to watch | Callsigns, registrations or hex codes. Optional, can be added later |
+| Flights to watch | Callsigns, registrations or hex codes, optionally followed by `= alias`. Optional, can be added later |
 | Send a notification to | Phones / tablets (Mobile App) or any other notify service |
 | Also notify when the flight leaves range | Off by default |
 | Units | Automatic (default), Metric or Aviation |
@@ -95,7 +97,7 @@ actions:
         {{ trigger.event.data.distance_km }} km away.
 ```
 
-Event data: `entry_id`, `watch` (the matching pattern), `hex`, `callsign`, `registration`,
+Event data: `entry_id`, `watch` (the matching pattern), `alias`, `hex`, `callsign`, `registration`,
 `aircraft_type`, `description`, `operator`, `altitude_ft`, `on_ground`, `ground_speed_kt`,
 `track_deg`, `vertical_rate_fpm`, `squawk`, `latitude`, `longitude`, `distance_km`,
 `bearing_deg`, `seen_s` (fields the receiver does not know are left out).

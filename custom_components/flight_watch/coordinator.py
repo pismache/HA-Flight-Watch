@@ -66,17 +66,46 @@ def pattern_matches(pattern: str, value: str | None) -> bool:
     return value == pattern
 
 
+def parse_watch_items(raw: list[str] | str | None) -> dict[str, str | None]:
+    """Parse the watch list into {pattern: alias}.
+
+    Each item is ``PATTERN`` or ``PATTERN = Alias`` (``:`` also accepted), e.g.
+    ``FBU85A = Retour maman``. Items without an alias may be comma-separated.
+    """
+    if not raw:
+        return {}
+    if isinstance(raw, str):
+        raw = [raw]
+    result: dict[str, str | None] = {}
+    for item in raw:
+        item = str(item)
+        sep = next((c for c in ("=", ":") if c in item), None)
+        if sep is None:
+            parts = [(p, None) for p in item.split(",")]
+        else:
+            pattern, alias = item.split(sep, 1)
+            parts = [(pattern, alias.strip() or None)]
+        for pattern, alias in parts:
+            norm = normalize(pattern)
+            if norm and norm != "*":
+                # a later alias for the same pattern wins; keep an earlier one otherwise
+                result[norm] = alias or result.get(norm)
+    return result
+
+
+def format_watch_items(items: dict[str, str | None]) -> list[str]:
+    """Inverse of parse_watch_items, used to store the options."""
+    return [f"{p} = {a}" if a else p for p, a in items.items()]
+
+
+def watch_items(entry: ConfigEntry) -> dict[str, str | None]:
+    """Watched {pattern: alias} of a config entry."""
+    return parse_watch_items(entry.options.get(CONF_CALLSIGNS, entry.data.get(CONF_CALLSIGNS, [])))
+
+
 def watch_list(entry: ConfigEntry) -> list[str]:
     """Return the normalized, de-duplicated list of watched patterns."""
-    raw = entry.options.get(CONF_CALLSIGNS, entry.data.get(CONF_CALLSIGNS, []))
-    if isinstance(raw, str):
-        raw = raw.split(",")
-    seen: dict[str, None] = {}
-    for item in raw:
-        norm = normalize(item)
-        if norm and norm != "*":
-            seen[norm] = None
-    return list(seen)
+    return list(watch_items(entry))
 
 
 def _haversine_km(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
@@ -190,7 +219,8 @@ class FlightWatchCoordinator(DataUpdateCoordinator[FlightWatchData]):
         self.max_seen: int = entry.options.get(
             CONF_MAX_SEEN, entry.data.get(CONF_MAX_SEEN, DEFAULT_MAX_SEEN)
         )
-        self.patterns: list[str] = watch_list(entry)
+        self.aliases: dict[str, str | None] = watch_items(entry)
+        self.patterns: list[str] = list(self.aliases)
         self.notify_services: list[str] = list(entry.options.get(CONF_NOTIFY, []))
         self.notify_lost: bool = entry.options.get(CONF_NOTIFY_LOST, False)
         self.units: str = resolve_units(hass, entry.options.get(CONF_UNITS))
@@ -249,17 +279,24 @@ class FlightWatchCoordinator(DataUpdateCoordinator[FlightWatchData]):
         previous = self._present
 
         # One notification per aircraft, even when it matches several patterns (FBU711 and FBU*)
-        to_notify_detected: dict[str, Aircraft] = {}
-        to_notify_lost: dict[str, Aircraft] = {}
+        to_notify_detected: dict[str, tuple[Aircraft, str | None]] = {}
+        to_notify_lost: dict[str, tuple[Aircraft, str | None]] = {}
 
         for key in current.keys() - previous:
             pattern, hex_code = key
             self.hass.bus.async_fire(
                 EVENT_FLIGHT_DETECTED,
-                {"entry_id": self.config_entry.entry_id, "watch": pattern, **current[key].as_attributes()},
+                {
+                    "entry_id": self.config_entry.entry_id,
+                    "watch": pattern,
+                    "alias": self.aliases.get(pattern),
+                    **current[key].as_attributes(),
+                },
             )
             if not any(k[1] == hex_code for k in previous):
-                to_notify_detected[hex_code] = current[key]
+                alias = self.aliases.get(pattern)
+                if hex_code not in to_notify_detected or (alias and not to_notify_detected[hex_code][1]):
+                    to_notify_detected[hex_code] = (current[key], alias)
         for key in previous - current.keys():
             pattern, hex_code = key
             last = self._last_seen.get(key)
@@ -268,18 +305,21 @@ class FlightWatchCoordinator(DataUpdateCoordinator[FlightWatchData]):
                 {
                     "entry_id": self.config_entry.entry_id,
                     "watch": pattern,
+                    "alias": self.aliases.get(pattern),
                     **(last.as_attributes() if last else {"hex": hex_code}),
                 },
             )
             if last and not any(k[1] == hex_code for k in current):
-                to_notify_lost[hex_code] = last
+                alias = self.aliases.get(pattern)
+                if hex_code not in to_notify_lost or (alias and not to_notify_lost[hex_code][1]):
+                    to_notify_lost[hex_code] = (last, alias)
 
         if self.notify_services:
-            for aircraft in to_notify_detected.values():
-                self._notify(aircraft, lost=False)
+            for aircraft, alias in to_notify_detected.values():
+                self._notify(aircraft, alias, lost=False)
             if self.notify_lost:
-                for aircraft in to_notify_lost.values():
-                    self._notify(aircraft, lost=True)
+                for aircraft, alias in to_notify_lost.values():
+                    self._notify(aircraft, alias, lost=True)
 
         self._present = set(current)
         self._last_seen = current
@@ -289,13 +329,14 @@ class FlightWatchCoordinator(DataUpdateCoordinator[FlightWatchData]):
         """Web interface of the receiver (tar1090), derived from the aircraft.json URL."""
         return self.url.rsplit("/data/", 1)[0]
 
-    def _notify(self, aircraft: Aircraft, *, lost: bool) -> None:
+    def _notify(self, aircraft: Aircraft, alias: str | None, *, lost: bool) -> None:
         self.config_entry.async_create_background_task(
             self.hass,
             async_send(
                 self.hass,
                 self.notify_services,
                 aircraft,
+                alias=alias,
                 lost=lost,
                 url=self.receiver_url,
                 units=self.units,

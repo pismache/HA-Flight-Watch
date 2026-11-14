@@ -216,3 +216,57 @@ async def test_units_switch_to_aviation(hass: HomeAssistant, aioclient_mock) -> 
     assert hass.states.get("sensor.flight_fbu711_ground_speed").attributes["unit_of_measurement"] == "kn"
     dist = hass.states.get("sensor.flight_fbu711_distance")
     assert dist.attributes["unit_of_measurement"] == "nmi"
+
+
+async def test_aliases(hass: HomeAssistant, aioclient_mock) -> None:
+    from homeassistant.helpers import device_registry as dr
+    from pytest_homeassistant_custom_component.common import async_mock_service
+
+    from custom_components.flight_watch.const import CONF_NOTIFY
+    from custom_components.flight_watch.coordinator import parse_watch_items
+
+    assert parse_watch_items(["fbu711 = Retour maman", "AFR*, EZY*", "F-HREU: Vol papa"]) == {
+        "FBU711": "Retour maman",
+        "AFR*": None,
+        "EZY*": None,
+        "F-HREU": "Vol papa",
+    }
+
+    calls = async_mock_service(hass, "notify", "mobile_app_iphone_test")
+    aioclient_mock.get(URL, json=EMPTY)
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="receiver.local",
+        data={CONF_URL: URL},
+        options={
+            CONF_CALLSIGNS: ["FBU*", "FBU711 = Retour maman"],
+            CONF_NOTIFY: ["mobile_app_iphone_test"],
+            CONF_SCAN_INTERVAL: 15,
+            CONF_MAX_SEEN: 60,
+        },
+    )
+    entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    device = dr.async_get(hass).async_get_device({(DOMAIN, f"{entry.entry_id}:FBU711")})
+    assert device.name == "Retour maman (FBU711)"
+
+    aioclient_mock.clear_requests()
+    aioclient_mock.get(URL, json=WITH_FLIGHT)
+    await entry.runtime_data.async_refresh()
+    await hass.async_block_till_done()
+    # Alias wins even though FBU* (no alias) is listed first
+    assert len(calls) == 1
+    assert calls[0].data["title"].startswith("✈️ Retour maman (FBU711)")
+    assert hass.states.get("binary_sensor.retour_maman_fbu711_in_range").attributes["alias"] == "Retour maman"
+
+
+async def test_options_keep_alias(hass: HomeAssistant, aioclient_mock) -> None:
+    entry = await _setup(hass, aioclient_mock, EMPTY)
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        {CONF_CALLSIGNS: ["fbu711 =  Retour maman "], CONF_SCAN_INTERVAL: 15, CONF_MAX_SEEN: 60},
+    )
+    assert result["data"][CONF_CALLSIGNS] == ["FBU711 = Retour maman"]

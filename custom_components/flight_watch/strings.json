@@ -14,7 +14,7 @@
           "units": "Units"
         },
         "data_description": {
-          "callsigns": "Callsign as transmitted (ICAO code, e.g. FBU711 for French Bee BF711), registration (F-HREU) or ICAO hex. End with * for a prefix match (FBU* = every French Bee flight).",
+          "callsigns": "Callsign as transmitted (ICAO code, e.g. FBU711 for French Bee BF711), registration (F-HREU) or ICAO hex. End with * for a prefix match (FBU* = every French Bee flight). Add a name after = to recognise it: FBU85A = Mum coming home.",
           "max_seen": "Seconds without any message from the aircraft before it is no longer considered in range.",
           "notify": "Phones, tablets or other notify services that receive an alert when a watched flight comes into range. Leave empty to only use the entities and events.",
           "units": "Altitude, distance and speed: metric (m, km, km/h), aviation (ft, NM, kt), or Automatic to follow the Home Assistant unit system."
@@ -42,7 +42,7 @@
           "units": "Units"
         },
         "data_description": {
-          "callsigns": "Callsign as transmitted (ICAO code, e.g. FBU711 for French Bee BF711), registration (F-HREU) or ICAO hex. End with * for a prefix match (FBU* = every French Bee flight).",
+          "callsigns": "Callsign as transmitted (ICAO code, e.g. FBU711 for French Bee BF711), registration (F-HREU) or ICAO hex. End with * for a prefix match (FBU* = every French Bee flight). Add a name after = to recognise it: FBU85A = Mum coming home.",
           "max_seen": "Seconds without any message from the aircraft before it is no longer considered in range.",
           "notify": "Phones, tablets or other notify services that receive an alert when a watched flight comes into range. Leave empty to only use the entities and events.",
           "units": "Altitude, distance and speed: metric (m, km, km/h), aviation (ft, NM, kt), or Automatic to follow the Home Assistant unit system."
@@ -58,12 +58,10 @@
     },
     "sensor": {
       "aircraft_total": {
-        "name": "Aircraft tracked",
-        "unit_of_measurement": "aircraft"
+        "name": "Aircraft tracked"
       },
       "aircraft_with_position": {
-        "name": "Aircraft with position",
-        "unit_of_measurement": "aircraft"
+        "name": "Aircraft with position"
       },
       "callsign": {
         "name": "Callsign"
