@@ -59,11 +59,18 @@ def _fmt(kind: str, value: float | int | None, units: str) -> str | None:
 
 
 def build_message(
-    hass: HomeAssistant, aircraft: Aircraft, *, lost: bool, units: str = UNITS_METRIC
+    hass: HomeAssistant,
+    aircraft: Aircraft,
+    *,
+    lost: bool,
+    units: str = UNITS_METRIC,
+    alias: str | None = None,
 ) -> tuple[str, str]:
     """Return (title, message) in French or English depending on the HA language."""
     french = (hass.config.language or "en").lower().startswith("fr")
     name = aircraft.callsign or aircraft.registration or aircraft.hex
+    if alias:
+        name = f"{alias} ({name})"
 
     model = aircraft.description or aircraft.aircraft_type
     altitude = (
@@ -98,9 +105,10 @@ async def async_send(
     lost: bool,
     url: str | None,
     units: str = UNITS_METRIC,
+    alias: str | None = None,
 ) -> None:
     """Send the notification to every selected notify service."""
-    title, message = build_message(hass, aircraft, lost=lost, units=units)
+    title, message = build_message(hass, aircraft, lost=lost, units=units, alias=alias)
     for service in services:
         if not hass.services.has_service(NOTIFY_DOMAIN, service):
             _LOGGER.warning("Notify service notify.%s no longer exists, skipping", service)

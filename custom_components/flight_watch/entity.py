@@ -9,6 +9,10 @@ from .const import DOMAIN
 from .coordinator import Aircraft, FlightWatchCoordinator
 
 
+def _device_name(pattern: str, alias: str | None) -> str:
+    return f"{alias} ({pattern})" if alias else f"Flight {pattern}"
+
+
 class FlightWatchReceiverEntity(CoordinatorEntity[FlightWatchCoordinator]):
     """Entity attached to the receiver device."""
 
@@ -44,7 +48,7 @@ class FlightWatchFlightEntity(CoordinatorEntity[FlightWatchCoordinator]):
         self._attr_translation_key = key
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, f"{entry_id}:{pattern}")},
-            name=f"Flight {pattern}",
+            name=_device_name(pattern, coordinator.aliases.get(pattern)),
             manufacturer="Flight Watch",
             model="Watched flight",
             entry_type=DeviceEntryType.SERVICE,

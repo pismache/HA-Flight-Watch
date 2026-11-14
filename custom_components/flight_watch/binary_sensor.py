@@ -45,6 +45,8 @@ class FlightInRangeBinarySensor(FlightWatchFlightEntity, BinarySensorEntity):
     def extra_state_attributes(self) -> dict[str, Any]:
         """Details of the nearest matching aircraft."""
         attrs: dict[str, Any] = {"watch": self.pattern, "match_count": len(self.matches)}
+        if alias := self.coordinator.aliases.get(self.pattern):
+            attrs["alias"] = alias
         if (nearest := self.nearest) is not None:
             attrs.update(nearest.as_attributes())
         if len(self.matches) > 1:
