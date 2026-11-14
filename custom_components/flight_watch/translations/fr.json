@@ -8,11 +8,14 @@
           "url": "URL de aircraft.json",
           "callsigns": "Vols à surveiller",
           "scan_interval": "Intervalle d'interrogation",
-          "max_seen": "Considérer un avion perdu après"
+          "max_seen": "Considérer un avion perdu après",
+          "notify": "Envoyer une notification à",
+          "notify_lost": "Prévenir aussi quand le vol sort de portée"
         },
         "data_description": {
           "callsigns": "Indicatif tel qu'émis (code OACI, ex. FBU711 pour le vol French Bee BF711), immatriculation (F-HREU) ou code hex OACI. Terminer par * pour une correspondance par préfixe (FBU* = tous les vols French Bee).",
-          "max_seen": "Secondes sans aucun message de l'avion avant qu'il ne soit plus considéré à portée."
+          "max_seen": "Secondes sans aucun message de l'avion avant qu'il ne soit plus considéré à portée.",
+          "notify": "Téléphones, tablettes ou autres services de notification qui reçoivent une alerte quand un vol surveillé arrive à portée. Laisser vide pour n'utiliser que les entités et les événements."
         }
       }
     },
@@ -31,27 +34,48 @@
         "data": {
           "callsigns": "Vols à surveiller",
           "scan_interval": "Intervalle d'interrogation",
-          "max_seen": "Considérer un avion perdu après"
+          "max_seen": "Considérer un avion perdu après",
+          "notify": "Envoyer une notification à",
+          "notify_lost": "Prévenir aussi quand le vol sort de portée"
         },
         "data_description": {
           "callsigns": "Indicatif tel qu'émis (code OACI, ex. FBU711 pour le vol French Bee BF711), immatriculation (F-HREU) ou code hex OACI. Terminer par * pour une correspondance par préfixe (FBU* = tous les vols French Bee).",
-          "max_seen": "Secondes sans aucun message de l'avion avant qu'il ne soit plus considéré à portée."
+          "max_seen": "Secondes sans aucun message de l'avion avant qu'il ne soit plus considéré à portée.",
+          "notify": "Téléphones, tablettes ou autres services de notification qui reçoivent une alerte quand un vol surveillé arrive à portée. Laisser vide pour n'utiliser que les entités et les événements."
         }
       }
     }
   },
   "entity": {
     "binary_sensor": {
-      "in_range": { "name": "À portée" }
+      "in_range": {
+        "name": "À portée"
+      }
     },
     "sensor": {
-      "aircraft_total": { "name": "Avions suivis", "unit_of_measurement": "avions" },
-      "aircraft_with_position": { "name": "Avions avec position", "unit_of_measurement": "avions" },
-      "callsign": { "name": "Indicatif" },
-      "altitude": { "name": "Altitude" },
-      "distance": { "name": "Distance" },
-      "ground_speed": { "name": "Vitesse sol" },
-      "bearing": { "name": "Relèvement" }
+      "aircraft_total": {
+        "name": "Avions suivis",
+        "unit_of_measurement": "avions"
+      },
+      "aircraft_with_position": {
+        "name": "Avions avec position",
+        "unit_of_measurement": "avions"
+      },
+      "callsign": {
+        "name": "Indicatif"
+      },
+      "altitude": {
+        "name": "Altitude"
+      },
+      "distance": {
+        "name": "Distance"
+      },
+      "ground_speed": {
+        "name": "Vitesse sol"
+      },
+      "bearing": {
+        "name": "Relèvement"
+      }
     }
   }
 }

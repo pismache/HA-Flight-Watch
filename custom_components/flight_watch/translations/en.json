@@ -8,11 +8,14 @@
           "url": "aircraft.json URL",
           "callsigns": "Flights to watch",
           "scan_interval": "Polling interval",
-          "max_seen": "Consider an aircraft gone after"
+          "max_seen": "Consider an aircraft gone after",
+          "notify": "Send a notification to",
+          "notify_lost": "Also notify when the flight leaves range"
         },
         "data_description": {
           "callsigns": "Callsign as transmitted (ICAO code, e.g. FBU711 for French Bee BF711), registration (F-HREU) or ICAO hex. End with * for a prefix match (FBU* = every French Bee flight).",
-          "max_seen": "Seconds without any message from the aircraft before it is no longer considered in range."
+          "max_seen": "Seconds without any message from the aircraft before it is no longer considered in range.",
+          "notify": "Phones, tablets or other notify services that receive an alert when a watched flight comes into range. Leave empty to only use the entities and events."
         }
       }
     },
@@ -31,27 +34,48 @@
         "data": {
           "callsigns": "Flights to watch",
           "scan_interval": "Polling interval",
-          "max_seen": "Consider an aircraft gone after"
+          "max_seen": "Consider an aircraft gone after",
+          "notify": "Send a notification to",
+          "notify_lost": "Also notify when the flight leaves range"
         },
         "data_description": {
           "callsigns": "Callsign as transmitted (ICAO code, e.g. FBU711 for French Bee BF711), registration (F-HREU) or ICAO hex. End with * for a prefix match (FBU* = every French Bee flight).",
-          "max_seen": "Seconds without any message from the aircraft before it is no longer considered in range."
+          "max_seen": "Seconds without any message from the aircraft before it is no longer considered in range.",
+          "notify": "Phones, tablets or other notify services that receive an alert when a watched flight comes into range. Leave empty to only use the entities and events."
         }
       }
     }
   },
   "entity": {
     "binary_sensor": {
-      "in_range": { "name": "In range" }
+      "in_range": {
+        "name": "In range"
+      }
     },
     "sensor": {
-      "aircraft_total": { "name": "Aircraft tracked", "unit_of_measurement": "aircraft" },
-      "aircraft_with_position": { "name": "Aircraft with position", "unit_of_measurement": "aircraft" },
-      "callsign": { "name": "Callsign" },
-      "altitude": { "name": "Altitude" },
-      "distance": { "name": "Distance" },
-      "ground_speed": { "name": "Ground speed" },
-      "bearing": { "name": "Bearing" }
+      "aircraft_total": {
+        "name": "Aircraft tracked",
+        "unit_of_measurement": "aircraft"
+      },
+      "aircraft_with_position": {
+        "name": "Aircraft with position",
+        "unit_of_measurement": "aircraft"
+      },
+      "callsign": {
+        "name": "Callsign"
+      },
+      "altitude": {
+        "name": "Altitude"
+      },
+      "distance": {
+        "name": "Distance"
+      },
+      "ground_speed": {
+        "name": "Ground speed"
+      },
+      "bearing": {
+        "name": "Bearing"
+      }
     }
   }
 }

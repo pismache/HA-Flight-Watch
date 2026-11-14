@@ -137,3 +137,58 @@ async def test_options_remove_flight(hass: HomeAssistant, aioclient_mock) -> Non
     await hass.async_block_till_done()
     assert hass.states.get("binary_sensor.flight_afr123_in_range").state == "on"
     assert hass.states.get("binary_sensor.flight_fbu711_in_range") is None
+
+
+async def test_notifications(hass: HomeAssistant, aioclient_mock) -> None:
+    from pytest_homeassistant_custom_component.common import async_mock_service
+
+    from custom_components.flight_watch.const import CONF_NOTIFY, CONF_NOTIFY_LOST
+
+    calls = async_mock_service(hass, "notify", "mobile_app_iphone_test")
+    aioclient_mock.get(URL, json=EMPTY)
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="receiver.local",
+        data={CONF_URL: URL},
+        options={
+            CONF_CALLSIGNS: ["FBU711", "FBU*"],
+            CONF_NOTIFY: ["mobile_app_iphone_test"],
+            CONF_NOTIFY_LOST: True,
+            CONF_SCAN_INTERVAL: 15,
+            CONF_MAX_SEEN: 60,
+        },
+    )
+    entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+    coordinator = entry.runtime_data
+
+    aioclient_mock.clear_requests()
+    aioclient_mock.get(URL, json=WITH_FLIGHT)
+    await coordinator.async_refresh()
+    await hass.async_block_till_done()
+    # One notification even though the aircraft matches two patterns
+    assert len(calls) == 1
+    assert "FBU711" in calls[0].data["title"]
+    assert "F-HREU" in calls[0].data["message"]
+    assert calls[0].data["data"]["url"] == "http://receiver.local/tar1090"
+
+    aioclient_mock.clear_requests()
+    aioclient_mock.get(URL, json=EMPTY)
+    await coordinator.async_refresh()
+    await hass.async_block_till_done()
+    assert len(calls) == 2
+    assert "FBU711" in calls[1].data["title"]
+
+
+async def test_notify_options_list(hass: HomeAssistant, aioclient_mock) -> None:
+    from pytest_homeassistant_custom_component.common import async_mock_service
+
+    async_mock_service(hass, "notify", "mobile_app_iphone_test")
+    async_mock_service(hass, "notify", "send_message")
+    entry = await _setup(hass, aioclient_mock, EMPTY)
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+    schema = result["data_schema"].schema
+    notify_key = next(k for k in schema if k == "notify")
+    values = [o["value"] for o in schema[notify_key].config["options"]]
+    assert values == ["mobile_app_iphone_test"]
