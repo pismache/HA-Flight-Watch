@@ -18,7 +18,10 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 from .const import (
     CONF_CALLSIGNS,
     CONF_MAX_SEEN,
+    CONF_NOTIFY,
+    CONF_NOTIFY_LOST,
     CONF_SCAN_INTERVAL,
+    CONF_UNITS,
     CONF_URL,
     DEFAULT_MAX_SEEN,
     DEFAULT_SCAN_INTERVAL,
@@ -28,6 +31,8 @@ from .const import (
     NM_TO_KM,
     REQUEST_TIMEOUT,
 )
+from .notify_helper import async_send
+from .units import resolve_units
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -186,6 +191,9 @@ class FlightWatchCoordinator(DataUpdateCoordinator[FlightWatchData]):
             CONF_MAX_SEEN, entry.data.get(CONF_MAX_SEEN, DEFAULT_MAX_SEEN)
         )
         self.patterns: list[str] = watch_list(entry)
+        self.notify_services: list[str] = list(entry.options.get(CONF_NOTIFY, []))
+        self.notify_lost: bool = entry.options.get(CONF_NOTIFY_LOST, False)
+        self.units: str = resolve_units(hass, entry.options.get(CONF_UNITS))
         self._session = async_get_clientsession(hass)
         # (pattern, hex) pairs currently in range, for detected/lost events
         self._present: set[tuple[str, str]] | None = None
@@ -240,26 +248,60 @@ class FlightWatchCoordinator(DataUpdateCoordinator[FlightWatchData]):
             return
         previous = self._present
 
+        # One notification per aircraft, even when it matches several patterns (FBU711 and FBU*)
+        to_notify_detected: dict[str, Aircraft] = {}
+        to_notify_lost: dict[str, Aircraft] = {}
+
         for key in current.keys() - previous:
-            pattern, _ = key
+            pattern, hex_code = key
             self.hass.bus.async_fire(
                 EVENT_FLIGHT_DETECTED,
                 {"entry_id": self.config_entry.entry_id, "watch": pattern, **current[key].as_attributes()},
             )
+            if not any(k[1] == hex_code for k in previous):
+                to_notify_detected[hex_code] = current[key]
         for key in previous - current.keys():
-            pattern, _ = key
+            pattern, hex_code = key
             last = self._last_seen.get(key)
             self.hass.bus.async_fire(
                 EVENT_FLIGHT_LOST,
                 {
                     "entry_id": self.config_entry.entry_id,
                     "watch": pattern,
-                    **(last.as_attributes() if last else {"hex": key[1]}),
+                    **(last.as_attributes() if last else {"hex": hex_code}),
                 },
             )
+            if last and not any(k[1] == hex_code for k in current):
+                to_notify_lost[hex_code] = last
+
+        if self.notify_services:
+            for aircraft in to_notify_detected.values():
+                self._notify(aircraft, lost=False)
+            if self.notify_lost:
+                for aircraft in to_notify_lost.values():
+                    self._notify(aircraft, lost=True)
 
         self._present = set(current)
         self._last_seen = current
+
+    @property
+    def receiver_url(self) -> str:
+        """Web interface of the receiver (tar1090), derived from the aircraft.json URL."""
+        return self.url.rsplit("/data/", 1)[0]
+
+    def _notify(self, aircraft: Aircraft, *, lost: bool) -> None:
+        self.config_entry.async_create_background_task(
+            self.hass,
+            async_send(
+                self.hass,
+                self.notify_services,
+                aircraft,
+                lost=lost,
+                url=self.receiver_url,
+                units=self.units,
+            ),
+            f"{DOMAIN} notification {aircraft.hex}",
+        )
 
 
 async def fetch_aircraft_json(session: aiohttp.ClientSession, url: str) -> dict[str, Any]:

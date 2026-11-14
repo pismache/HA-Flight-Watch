@@ -5,9 +5,14 @@ from __future__ import annotations
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import entity_registry as er
 
 from .const import DOMAIN
 from .coordinator import FlightWatchConfigEntry, FlightWatchCoordinator, watch_list
+from .units import unit_for
+
+# unique_id suffix -> kind of unit
+_UNIT_SENSORS = {"_altitude": "altitude", "_distance": "distance", "_ground_speed": "speed"}
 
 PLATFORMS: list[Platform] = [Platform.BINARY_SENSOR, Platform.SENSOR]
 
@@ -19,6 +24,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: FlightWatchConfigEntry) 
     entry.runtime_data = coordinator
 
     _remove_stale_devices(hass, entry)
+    _apply_units(hass, entry, coordinator.units)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     entry.async_on_unload(entry.add_update_listener(_async_reload_entry))
@@ -57,3 +63,29 @@ def _remove_stale_devices(hass: HomeAssistant, entry: FlightWatchConfigEntry) ->
         idents = {ident[1] for ident in device.identifiers if ident[0] == DOMAIN}
         if idents and not idents & valid:
             registry.async_update_device(device.id, remove_config_entry_id=entry.entry_id)
+
+
+def _apply_units(hass: HomeAssistant, entry: FlightWatchConfigEntry, units: str) -> None:
+    """Make existing sensors follow the units option.
+
+    Home Assistant stores the suggested unit in the entity registry when an entity is
+    first created, so changing the option alone would not change already-created sensors.
+    A unit the user forced in the entity settings still wins over this.
+    """
+    registry = er.async_get(hass)
+    for reg_entry in er.async_entries_for_config_entry(registry, entry.entry_id):
+        if reg_entry.domain != "sensor":
+            continue
+        kind = next(
+            (k for suffix, k in _UNIT_SENSORS.items() if reg_entry.unique_id.endswith(suffix)), None
+        )
+        if kind is None:
+            continue
+        wanted = unit_for(kind, units)
+        private = reg_entry.options.get("sensor.private", {})
+        if private.get("suggested_unit_of_measurement") != wanted:
+            registry.async_update_entity_options(
+                reg_entry.entity_id,
+                "sensor.private",
+                {**private, "suggested_unit_of_measurement": wanted},
+            )

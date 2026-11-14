@@ -17,9 +17,13 @@ already publishes. No cloud service, no API key.
 - For each watched flight, a device with:
   - `binary_sensor.flight_<x>_in_range` – on while the aircraft is received, with all
     its details as attributes (callsign, registration, type, altitude, speed, position…)
-  - sensors for callsign, altitude (ft), distance (km), ground speed (kt) and bearing
+  - sensors for callsign, altitude, distance, ground speed and bearing
     (bearing is disabled by default)
+- **Units of your choice**: metric (m, km, km/h), aviation (ft, NM, kt), or automatic
+  (follows the Home Assistant unit system), for sensors and notifications.
 - Receiver device with the number of aircraft tracked and with a position.
+- **Built-in notifications**: pick your phone(s) in the options and get an alert when a
+  watched flight comes into range (optionally also when it leaves), no automation needed.
 - Events `flight_watch_flight_detected` and `flight_watch_flight_lost` for automations.
 - Watched flights are edited from the UI (**Configure** on the integration), no YAML.
 
@@ -43,6 +47,9 @@ Copy `custom_components/flight_watch` into your `config/custom_components` folde
 |---|---|
 | aircraft.json URL | `http://<receiver>/tar1090/data/aircraft.json` (tar1090), or `http://<host>:<port>/data/aircraft.json` (ultrafeeder) |
 | Flights to watch | Callsigns, registrations or hex codes. Optional, can be added later |
+| Send a notification to | Phones / tablets (Mobile App) or any other notify service |
+| Also notify when the flight leaves range | Off by default |
+| Units | Automatic (default), Metric or Aviation |
 | Polling interval | Default 15 s |
 | Consider an aircraft gone after | Seconds without any message before the flight is no longer in range (default 60 s) |
 
@@ -57,7 +64,21 @@ If you are not sure, use the airline prefix with `*` (`FBU*`) or the aircraft re
 The distance comes from readsb (`r_dst`) when the receiver location is set; otherwise it is
 computed from the Home Assistant home location.
 
+## Notifications
+
+Choose the devices in **Configure**. The notification looks like:
+
+> **✈️ FBU711 in range of the receiver**
+> AIRBUS A-350-900 – F-HREU
+> 11 278 m · 42 km · 891 km/h
+
+On a phone, tapping it opens the receiver's tar1090 page. An aircraft matching several
+watched patterns (`FBU711` and `FBU*`) is notified once. Texts are in French when Home
+Assistant is set to French, English otherwise.
+
 ## Automation example
+
+For anything more custom, use the events:
 
 ```yaml
 alias: Flight in range of the radar

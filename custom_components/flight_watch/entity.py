@@ -26,7 +26,7 @@ class FlightWatchReceiverEntity(CoordinatorEntity[FlightWatchCoordinator]):
             manufacturer="readsb / tar1090",
             model="ADS-B receiver",
             entry_type=DeviceEntryType.SERVICE,
-            configuration_url=coordinator.url.rsplit("/data/", 1)[0],
+            configuration_url=coordinator.receiver_url,
         )
 
 

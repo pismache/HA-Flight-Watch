@@ -22,6 +22,7 @@ from .coordinator import (
     FlightWatchData,
 )
 from .entity import FlightWatchFlightEntity, FlightWatchReceiverEntity
+from .units import unit_for
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -36,6 +37,7 @@ class FlightSensorDescription(SensorEntityDescription):
     """Describes a sensor of a watched flight (values from the nearest match)."""
 
     value_fn: Callable[[Aircraft], float | int | str | None]
+    unit_kind: str | None = None  # altitude / distance / speed: unit follows the units option
 
 
 RECEIVER_SENSORS: tuple[ReceiverSensorDescription, ...] = (
@@ -63,9 +65,9 @@ FLIGHT_SENSORS: tuple[FlightSensorDescription, ...] = (
         key="altitude",
         device_class=SensorDeviceClass.DISTANCE,
         native_unit_of_measurement=UnitOfLength.FEET,
-        suggested_unit_of_measurement=UnitOfLength.FEET,
         suggested_display_precision=0,
         icon="mdi:altimeter",
+        unit_kind="altitude",
         value_fn=lambda a: 0 if a.on_ground else a.altitude_ft,
     ),
     FlightSensorDescription(
@@ -74,14 +76,15 @@ FLIGHT_SENSORS: tuple[FlightSensorDescription, ...] = (
         native_unit_of_measurement=UnitOfLength.KILOMETERS,
         suggested_display_precision=1,
         icon="mdi:map-marker-distance",
+        unit_kind="distance",
         value_fn=lambda a: a.distance_km,
     ),
     FlightSensorDescription(
         key="ground_speed",
         device_class=SensorDeviceClass.SPEED,
         native_unit_of_measurement=UnitOfSpeed.KNOTS,
-        suggested_unit_of_measurement=UnitOfSpeed.KNOTS,
         suggested_display_precision=0,
+        unit_kind="speed",
         value_fn=lambda a: a.ground_speed_kt,
     ),
     FlightSensorDescription(
@@ -147,6 +150,13 @@ class FlightSensor(FlightWatchFlightEntity, SensorEntity):
         """Initialize."""
         super().__init__(coordinator, pattern, description.key)
         self.entity_description = description
+
+    @property
+    def suggested_unit_of_measurement(self) -> str | None:
+        """Unit chosen in the integration options (metric / aviation / imperial)."""
+        if self.entity_description.unit_kind is None:
+            return None
+        return unit_for(self.entity_description.unit_kind, self.coordinator.units)
 
     @property
     def native_value(self) -> float | int | str | None:
